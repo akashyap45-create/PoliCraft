@@ -1,27 +1,27 @@
 # app.py
 
 import streamlit as st
+import os
 import google.generativeai as genai
 
 # ------------------
-# Gemini API Setup
+# API Setup
 # ------------------
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-import os
-genai.configure(api_key=os.getenv("AIzaSyA0txOqhhXgktLDE4h-r6DHI_F1lxmlLMU"))
-
-model = genai.GenerativeModel(model_name="models/gemini-pro")
-
+# Use Gemini 1.5 Pro (latest version, correct model name)
+model = genai.GenerativeModel(model_name="models/gemini-1.5-pro-latest")
 
 # ------------------
-# Streamlit UI
+# Streamlit UI Setup
 # ------------------
 st.set_page_config(page_title="PoliCraft", layout="centered")
 st.title("🧠 PoliCraft – AI Policy Assistant")
-
 st.markdown("Craft smarter public policy drafts & simulate stakeholder reactions in seconds.")
 
-# --- Inputs
+# ------------------
+# User Inputs
+# ------------------
 topic = st.text_input("🔍 Policy Topic", placeholder="e.g., Reduce school dropout rate in Bihar")
 sector = st.selectbox("🏛️ Select Sector", ["Education", "Health", "Environment", "Employment", "Agriculture", "Other"])
 location = st.text_input("📍 Target Region (optional)", placeholder="e.g., Bihar, India")
@@ -31,10 +31,10 @@ location = st.text_input("📍 Target Region (optional)", placeholder="e.g., Bih
 # ------------------
 def generate_policy(topic, sector, location):
     prompt = f"""
-You are a public policy consultant. Draft a concise policy proposal (600 words max) to address the issue:
-"{topic}" in the context of {sector} sector {f"in {location}" if location else ""}.
+You are a public policy consultant. Draft a concise policy proposal (max 600 words) to address:
+"{topic}" in the {sector} sector {f"in {location}" if location else ""}.
 
-Structure it as follows:
+Structure:
 1. Problem Statement
 2. Current Landscape
 3. Objectives
@@ -43,50 +43,61 @@ Structure it as follows:
 6. Risk Factors
 7. Budget Estimate (indicative)
 8. Key Stakeholders
-The tone should be professional, neutral, and suitable for public sector reports in India.
+
+Tone: Formal, professional, and suitable for an Indian policy audience.
 """
-    response = model.generate_content(prompt)
+    response = model.generate_content([prompt])
     return response.text
 
 # ------------------
-# Stakeholder Prompt
+# Stakeholder Simulation Prompt
 # ------------------
 def simulate_stakeholders(policy_draft):
-    sim_prompt = f"""
+    prompt = f"""
 Given the following policy draft:
 
 \"\"\"
 {policy_draft}
 \"\"\"
 
-Simulate realistic reactions from these stakeholders:
+Simulate reactions from:
 1. Bureaucrat (focus on implementation feasibility)
-2. Local citizen (focus on ground impact)
-3. Politician (opposition party)
-4. NGO worker
-5. Supreme Court judge (if applicable)
+2. Local Citizen (focus on ground-level impact)
+3. Opposition Politician (focus on political concerns)
+4. NGO Worker (focus on inclusiveness and sustainability)
+5. Supreme Court Judge (legal and constitutional aspects, if applicable)
 
-Each response should reflect the stakeholder's likely perspective in 4–5 sentences.
+Each response should be 4–5 sentences and reflect their realistic viewpoints.
 """
-    sim_response = model.generate_content(sim_prompt)
-    return sim_response.text
+    response = model.generate_content([prompt])
+    return response.text
 
 # ------------------
-# App Buttons
+# Generate Policy Draft
 # ------------------
 if st.button("🚀 Generate Policy Draft"):
     if topic.strip():
         with st.spinner("Generating policy draft..."):
-            draft = generate_policy(topic, sector, location)
-            st.subheader("📄 Policy Draft")
-            st.markdown(draft)
-            st.session_state["draft"] = draft
+            try:
+                draft = generate_policy(topic, sector, location)
+                st.subheader("📄 Policy Draft")
+                st.markdown(draft)
+                st.session_state["draft"] = draft
+            except Exception as e:
+                st.error(f"Something went wrong: {e}")
     else:
         st.warning("Please enter a policy topic.")
 
+# ------------------
+# Simulate Stakeholder Reactions
+# ------------------
 if "draft" in st.session_state:
     if st.button("🤝 Simulate Stakeholder Reactions"):
-        with st.spinner("Simulating reactions..."):
-            sim = simulate_stakeholders(st.session_state["draft"])
-            st.subheader("👥 Stakeholder Responses")
-            st.markdown(sim)
+        with st.spinner("Simulating responses..."):
+            try:
+                sim = simulate_stakeholders(st.session_state["draft"])
+                st.subheader("👥 Stakeholder Reactions")
+                st.markdown(sim)
+            except Exception as e:
+                st.error(f"Simulation failed: {e}")
+
