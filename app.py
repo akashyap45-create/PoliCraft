@@ -10,7 +10,8 @@ import google.generativeai as genai
 import os
 genai.configure(api_key=os.getenv("AIzaSyA0txOqhhXgktLDE4h-r6DHI_F1lxmlLMU"))
 
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel(model_name="models/gemini-pro")
+
 
 # ------------------
 # Streamlit UI
