@@ -1,16 +1,13 @@
 # app.py
 
 import streamlit as st
-import os
 import google.generativeai as genai
 
 # ------------------
 # API Setup
 # ------------------
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-# Use Gemini Pro (correct model name)
-model = genai.GenerativeModel(model_name="models/gemini-pro")
+model = genai.GenerativeModel("models/text-bison-001")
 
 # ------------------
 # Streamlit UI Setup
@@ -47,7 +44,7 @@ Structure:
 Tone: Formal, professional, and suitable for an Indian policy audience.
 """
     try:
-        response = model.generate_content([prompt])
+        response = model.generate_content(prompt)
         return response.text
     except Exception as e:
         return f"❌ Error: {e}"
@@ -73,7 +70,7 @@ Simulate realistic reactions from:
 Each response should be 4–5 sentences.
 """
     try:
-        response = model.generate_content([prompt])
+        response = model.generate_content(prompt)
         return response.text
     except Exception as e:
         return f"❌ Error: {e}"
@@ -97,3 +94,4 @@ if "draft" in st.session_state:
             reactions = simulate_stakeholders(st.session_state["draft"])
             st.subheader("👥 Stakeholder Reactions")
             st.markdown(reactions)
+
