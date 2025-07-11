@@ -9,8 +9,8 @@ import google.generativeai as genai
 # ------------------
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Use Gemini 1.5 Pro (latest version, correct model name)
-model = genai.GenerativeModel(model_name="models/gemini-1.5-pro-latest")
+# Use working model for 0.5.4 (text-bison)
+model = genai.GenerativeModel("models/text-bison-001")
 
 # ------------------
 # Streamlit UI Setup
@@ -46,8 +46,11 @@ Structure:
 
 Tone: Formal, professional, and suitable for an Indian policy audience.
 """
-    response = model.generate_content([prompt])
-    return response.text
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"❌ Error: {e}"
 
 # ------------------
 # Stakeholder Simulation Prompt
@@ -69,8 +72,11 @@ Simulate reactions from:
 
 Each response should be 4–5 sentences and reflect their realistic viewpoints.
 """
-    response = model.generate_content([prompt])
-    return response.text
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"❌ Error: {e}"
 
 # ------------------
 # Generate Policy Draft
@@ -78,13 +84,10 @@ Each response should be 4–5 sentences and reflect their realistic viewpoints.
 if st.button("🚀 Generate Policy Draft"):
     if topic.strip():
         with st.spinner("Generating policy draft..."):
-            try:
-                draft = generate_policy(topic, sector, location)
-                st.subheader("📄 Policy Draft")
-                st.markdown(draft)
-                st.session_state["draft"] = draft
-            except Exception as e:
-                st.error(f"Something went wrong: {e}")
+            draft = generate_policy(topic, sector, location)
+            st.subheader("📄 Policy Draft")
+            st.markdown(draft)
+            st.session_state["draft"] = draft
     else:
         st.warning("Please enter a policy topic.")
 
@@ -94,10 +97,8 @@ if st.button("🚀 Generate Policy Draft"):
 if "draft" in st.session_state:
     if st.button("🤝 Simulate Stakeholder Reactions"):
         with st.spinner("Simulating responses..."):
-            try:
-                sim = simulate_stakeholders(st.session_state["draft"])
-                st.subheader("👥 Stakeholder Reactions")
-                st.markdown(sim)
-            except Exception as e:
-                st.error(f"Simulation failed: {e}")
+            sim = simulate_stakeholders(st.session_state["draft"])
+            st.subheader("👥 Stakeholder Reactions")
+            st.markdown(sim)
+
 
