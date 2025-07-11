@@ -7,10 +7,10 @@ import google.generativeai as genai
 # ------------------
 # API Setup
 # ------------------
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-# Use working model for 0.5.4 (text-bison)
-model = genai.GenerativeModel("models/text-bison-001")
+# Use Gemini Pro (correct model name)
+model = genai.GenerativeModel(model_name="models/gemini-pro")
 
 # ------------------
 # Streamlit UI Setup
@@ -27,7 +27,7 @@ sector = st.selectbox("🏛️ Select Sector", ["Education", "Health", "Environm
 location = st.text_input("📍 Target Region (optional)", placeholder="e.g., Bihar, India")
 
 # ------------------
-# Policy Draft Prompt
+# Policy Draft Function
 # ------------------
 def generate_policy(topic, sector, location):
     prompt = f"""
@@ -47,13 +47,13 @@ Structure:
 Tone: Formal, professional, and suitable for an Indian policy audience.
 """
     try:
-        response = model.generate_content(prompt)
+        response = model.generate_content([prompt])
         return response.text
     except Exception as e:
         return f"❌ Error: {e}"
 
 # ------------------
-# Stakeholder Simulation Prompt
+# Stakeholder Simulation Function
 # ------------------
 def simulate_stakeholders(policy_draft):
     prompt = f"""
@@ -63,23 +63,23 @@ Given the following policy draft:
 {policy_draft}
 \"\"\"
 
-Simulate reactions from:
-1. Bureaucrat (focus on implementation feasibility)
-2. Local Citizen (focus on ground-level impact)
-3. Opposition Politician (focus on political concerns)
-4. NGO Worker (focus on inclusiveness and sustainability)
-5. Supreme Court Judge (legal and constitutional aspects, if applicable)
+Simulate realistic reactions from:
+1. Bureaucrat (implementation feasibility)
+2. Local Citizen (impact on daily life)
+3. Opposition Politician (political critique)
+4. NGO Worker (sustainability and inclusiveness)
+5. Supreme Court Judge (legal/constitutional aspects)
 
-Each response should be 4–5 sentences and reflect their realistic viewpoints.
+Each response should be 4–5 sentences.
 """
     try:
-        response = model.generate_content(prompt)
+        response = model.generate_content([prompt])
         return response.text
     except Exception as e:
         return f"❌ Error: {e}"
 
 # ------------------
-# Generate Policy Draft
+# UI Actions
 # ------------------
 if st.button("🚀 Generate Policy Draft"):
     if topic.strip():
@@ -91,14 +91,9 @@ if st.button("🚀 Generate Policy Draft"):
     else:
         st.warning("Please enter a policy topic.")
 
-# ------------------
-# Simulate Stakeholder Reactions
-# ------------------
 if "draft" in st.session_state:
     if st.button("🤝 Simulate Stakeholder Reactions"):
-        with st.spinner("Simulating responses..."):
-            sim = simulate_stakeholders(st.session_state["draft"])
+        with st.spinner("Simulating reactions..."):
+            reactions = simulate_stakeholders(st.session_state["draft"])
             st.subheader("👥 Stakeholder Reactions")
-            st.markdown(sim)
-
-
+            st.markdown(reactions)
